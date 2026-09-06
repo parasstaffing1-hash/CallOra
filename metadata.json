@@ -1,0 +1,6 @@
+{
+  "name": "Callora",
+  "description": "Callora - AI-powered call intelligence, VoIP audio recording, live transcription, deal coaching, and client recap suite for agencies.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

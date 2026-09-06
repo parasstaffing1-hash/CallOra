@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Callora Logo: centered within the safe 66dp zone (21dp - 87dp) -->
+    
+    <!-- Outer 'C' circular arc with smooth rounded endpoints and vibrant gradient -->
+    <path
+        android:pathData="M 64,37 A 23,23 0 1,0 64,71"
+        android:strokeWidth="11"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="20"
+                android:startY="32"
+                android:endX="66"
+                android:endY="72"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#2563EB" />
+                <item android:offset="0.55" android:color="#3B82F6" />
+                <item android:offset="1.0" android:color="#6366F1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Soundwave Bar 1 (Short): Electric Azure Blue -->
+    <path
+        android:pathData="M 52,48 L 52,60"
+        android:strokeWidth="4.5"
+        android:strokeColor="#007AFF"
+        android:strokeLineCap="round" />
+
+    <!-- Soundwave Bar 2 (Tall, Center): Electric Azure Blue -->
+    <path
+        android:pathData="M 60,40 L 60,68"
+        android:strokeWidth="4.5"
+        android:strokeColor="#007AFF"
+        android:strokeLineCap="round" />
+
+    <!-- Soundwave Bar 3 (Medium): Electric Azure Blue -->
+    <path
+        android:pathData="M 68,48 L 68,60"
+        android:strokeWidth="4.5"
+        android:strokeColor="#007AFF"
+        android:strokeLineCap="round" />
+
+    <!-- Coral-Red Pulse Dot -->
+    <path
+        android:pathData="M 77,54 m -4,0 a 4,4 0 1,0 8,0 a 4,4 0 1,0 -8,0"
+        android:fillColor="#FF4B4B" />
+
+</vector>
+
