@@ -1,0 +1,8 @@
+# Binary assets - never newline- or encoding-normalize these.
+*.png binary
+*.webp binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.jks binary
+*.keystore binary

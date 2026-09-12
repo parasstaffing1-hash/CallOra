@@ -32,6 +32,13 @@ fun SettingsScreen(
     var noiseSuppression by remember { mutableStateOf(true) }
 
     val twoPartyConsent by viewModel.twoPartyConsentPingEnabled.collectAsStateWithLifecycle()
+    val voiceEffect by viewModel.voiceEffect.collectAsStateWithLifecycle()
+    val isVoicePreviewing by viewModel.isVoicePreviewRunning.collectAsStateWithLifecycle()
+    val voiceLevel by viewModel.voicePreviewLevel.collectAsStateWithLifecycle()
+    val voiceError by viewModel.voicePreviewError.collectAsStateWithLifecycle()
+
+    // Preview holds the microphone; never let it outlive this screen.
+    DisposableEffect(Unit) { onDispose { viewModel.stopVoicePreview() } }
     val piiRedaction by viewModel.piiRedactionEnabled.collectAsStateWithLifecycle()
     val isFloatingWidgetEnabled by viewModel.isFloatingWidgetEnabled.collectAsStateWithLifecycle()
 
@@ -91,6 +98,18 @@ fun SettingsScreen(
                         )
                     }
                 }
+            }
+
+            // Voice changer presets + local monitoring
+            item {
+                VoiceChangerCard(
+                    selected = voiceEffect,
+                    isPreviewing = isVoicePreviewing,
+                    level = voiceLevel,
+                    error = voiceError,
+                    onSelect = viewModel::setVoiceEffect,
+                    onTogglePreview = viewModel::toggleVoicePreview,
+                )
             }
 
             // Callora Live Intelligence & Coaching Suite

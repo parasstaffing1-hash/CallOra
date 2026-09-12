@@ -12,6 +12,9 @@ import com.example.data.db.AppDatabase
 import com.example.data.model.*
 import com.example.data.repository.CallRepository
 import com.example.service.AudioPlayerManager
+import com.example.audio.VoiceChangerEngine
+import com.example.audio.VoiceChangerPreferences
+import com.example.audio.VoiceEffect
 import com.example.service.CallRecordingService
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -26,6 +29,46 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val repository = CallRepository(db.callDao(), db.clientDao())
 
     val audioPlayerManager = AudioPlayerManager(application)
+
+    // ---- Voice changer -------------------------------------------------------------------
+    // Alters audio Callora itself owns. It cannot change what the far end hears on a WhatsApp
+    // or cellular call; see VoiceChangerEngine's docs for why.
+    private val voicePrefs = VoiceChangerPreferences(application)
+    private val voiceChangerEngine = VoiceChangerEngine(application, effect = voicePrefs.effect)
+
+    val voiceEffect = MutableStateFlow(voicePrefs.effect)
+    val isVoicePreviewRunning: StateFlow<Boolean> = voiceChangerEngine.running
+    val voicePreviewLevel: StateFlow<Float> = voiceChangerEngine.level
+
+    /** Last preview failure, for surfacing in the UI. Cleared on the next successful start. */
+    val voicePreviewError = MutableStateFlow<String?>(null)
+
+    fun setVoiceEffect(effect: VoiceEffect) {
+        voiceEffect.value = effect
+        voicePrefs.effect = effect
+        // Applied at the next block boundary; safe to call while a preview is running.
+        voiceChangerEngine.effect = effect
+    }
+
+    /** Toggles local monitoring so the user can hear the selected preset. */
+    fun toggleVoicePreview() {
+        if (voiceChangerEngine.isRunning) {
+            voiceChangerEngine.stop()
+            return
+        }
+        when (val result = voiceChangerEngine.start(VoiceChangerEngine.SinkMode.MONITOR)) {
+            is VoiceChangerEngine.StartResult.Started,
+            is VoiceChangerEngine.StartResult.AlreadyRunning -> voicePreviewError.value = null
+            is VoiceChangerEngine.StartResult.PermissionDenied ->
+                voicePreviewError.value = "Microphone permission is required"
+            is VoiceChangerEngine.StartResult.Unsupported ->
+                voicePreviewError.value = "Preview unavailable: ${result.reason}"
+        }
+    }
+
+    fun stopVoicePreview() {
+        if (voiceChangerEngine.isRunning) voiceChangerEngine.stop()
+    }
 
     // Service binding for Recording
     private var recordingService: CallRecordingService? = null
@@ -548,6 +591,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
+        // Releases the mic and the capture thread; without this a preview outlives the screen.
+        voiceChangerEngine.stop()
         audioPlayerManager.release()
         try {
             if (_isServiceBound.value) {

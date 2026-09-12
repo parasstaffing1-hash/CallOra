@@ -1,21 +1,60 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+# R8 / ProGuard rules for Callora release builds.
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# The app reflects over types in three places that shrinking would otherwise break:
+# Moshi JSON adapters, Retrofit service interfaces, and Room entities. Everything below
+# exists to keep one of those working; nothing here is speculative.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ---- Attributes needed by reflective libraries -------------------------------------------
+-keepattributes Signature
+-keepattributes InnerClasses, EnclosingMethod
+-keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations
+-keepattributes AnnotationDefault
+-keepattributes SourceFile, LineNumberTable
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# ---- Retrofit ----------------------------------------------------------------------------
+# Service interfaces are implemented by a runtime proxy, so their methods and generic
+# signatures must survive.
+-keep,allowobfuscation,allowshrinking interface retrofit2.Call
+-keep,allowobfuscation,allowshrinking class retrofit2.Response
+-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+-if interface * { @retrofit2.http.* public *** *(...); }
+-keep,allowoptimization,allowshrinking,allowobfuscation class <3>
+-dontwarn retrofit2.**
+-dontwarn javax.annotation.**
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# ---- OkHttp ------------------------------------------------------------------------------
+# Optional TLS providers referenced but not bundled.
+-dontwarn okhttp3.internal.platform.**
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**
+
+# ---- Moshi -------------------------------------------------------------------------------
+# Codegen emits *JsonAdapter classes that are looked up by name at runtime.
+-keep class **JsonAdapter { <init>(...); *; }
+-keepnames @com.squareup.moshi.JsonClass class *
+-keep @com.squareup.moshi.JsonQualifier @interface *
+-keepclassmembers @com.squareup.moshi.JsonClass class * extends java.lang.Enum { <fields>; }
+-keepclasseswithmembers class * { @com.squareup.moshi.* <methods>; }
+-dontwarn com.squareup.moshi.**
+
+# ---- Room --------------------------------------------------------------------------------
+-keep class * extends androidx.room.RoomDatabase { <init>(); }
+-dontwarn androidx.room.paging.**
+
+# ---- Callora models ----------------------------------------------------------------------
+# Room entities and the Gemini request/response DTOs are both mapped by field name.
+-keep class com.example.data.model.** { *; }
+
+# ---- Audio engine ------------------------------------------------------------------------
+# The DSP is plain Kotlin and safe to optimise, but keep the enum constants: presets are
+# persisted by enum name in SharedPreferences and resolved with valueOf().
+-keepclassmembers enum com.example.audio.VoiceEffect { *; }
+
+# ---- Firebase ----------------------------------------------------------------------------
+-dontwarn com.google.firebase.**
+-keepnames class com.google.firebase.** { *; }
+
+# ---- Kotlin ------------------------------------------------------------------------------
+-dontwarn kotlin.**
+-keepclassmembers class **$WhenMappings { <fields>; }
